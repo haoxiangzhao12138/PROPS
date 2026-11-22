@@ -31,14 +31,15 @@ AUTHORS = ("Xiangzhao Hao<sup>1,2*</sup>, Dianyi Wang<sup>3*</sup>, Keyan Zhou<s
 AFFIL = ("<sup>1</sup>Shanghai Innovation Institute &nbsp; <sup>2</sup>Shanghai Jiao Tong University &nbsp; "
          "<sup>3</sup>Fudan University &nbsp; <sup>4</sup>Hangzhou Dianzi University<br><sup>5</sup>Institute of Information "
          "Engineering, University of Chinese Academy of Sciences &nbsp; <sup>6</sup>Li Auto Inc.")
-NOTE = "<sup>*</sup>Equal contribution &nbsp; <sup>&dagger;</sup>Corresponding author"
-FIGS = {"fig1": "ppt_fig1", "method": "ppt_method", "pipeline": "ppt_pipeline", "train": "ppt_train",
+EMAILS = ["haoxiangzhao@sii.edu.cn", "dywang24@m.fudan.edu.cn", "jonaszhou01@gmail.com", "yiqian.zyq@gmail.com",
+          "zhangzef1999@163.com", "libailin@lixiang.com", "zhankun@lixiang.com", "yanjunchi@sjtu.edu.cn"]  # author order
+FIGS = {"overview": "ppt_rings", "method": "ppt_method", "pipeline": "ppt_pipeline", "train": "ppt_train",
         "agents": "ppt_agents", "qual": "ppt_qual"}
 CAP = {
-    "fig1": "A Resist-Stale pair. The twins have identical scripts. The script of the evidence frame says that the "
-            "painting has been replaced but describes neither painting; the opening frame shows the stale one. A side "
-            "passes if the output shows the current painting and carries out the request. SenseNova-U1.5 fails both "
-            "sides and passes both after fine-tuning on PROPS-Train.",
+    "overview": "PROPS and PROPS-Train. Left: pairs by requirement and subtype, and the two looks of the prop in two "
+                "pairs per requirement, with Reuse crops cut from frames drawn by SenseNova-U1.5. Right: chains by "
+                "track, with intercut chains split by the number of shots cut away and synthetic chains by kind of "
+                "change, and the keyframes of one chain per track with its supervised targets marked.",
     "method": "Twin histories. The twins share every script and differ only in how the prop looks, so one answer drawn "
               "from the scripts cannot match both. Bottom: the history of twin A in each of the eight subtypes.",
     "pipeline": "Building PROPS on one Recall-Start pair. One edit call changes the prop in the evidence and query "
@@ -264,6 +265,7 @@ def page(out):
                   (("paper", "Paper (PDF)"), ("arxiv", "arXiv"), ("code", "Code"), ("bench", "PROPS-Benchmark"),
                    ("train", "PROPS-Train")))
     nav = "".join(f'<a href="#{k}">{T(t, Z.NAV[k])}</a>' for k, t in NAV)
+    mails = "".join(f'<a href="mailto:{m}">{m}</a>' for m in EMAILS)
     h2 = lambda k, en: f"<h2>{T(en, Z.HEAD[k])}</h2>"
     absx = T((out / "static/abstract.html").read_text().strip(), (HERE / "abstract_zh.html").read_text().strip(), "p")
     blob = json.dumps(D, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
@@ -274,8 +276,9 @@ def page(out):
 <nav class="top"><div class="in"><a class="brand" href="#">PROPS</a>{nav}<button class="lang" id="lang">{T("中文", "EN")}</button></div></nav>
 <header class="hero"><h1><span>PROPS</span>: Can Visual Generators Keep the Current Look of a Prop?</h1>
 <div class="zh subtitle">{Z.TITLE}</div>
-<div class="authors">{AUTHORS}</div><div class="affil">{AFFIL}<br>{T(NOTE, Z.NOTE)}</div><div class="btns">{btn}</div></header><main>
-<section id="overview">{fig("fig1")}
+<div class="authors">{AUTHORS}</div><div class="affil">{AFFIL}</div>
+<div class="emails">{mails}</div><div class="btns">{btn}</div></header><main>
+<section id="overview">{fig("overview")}
 {h2("abstract", "Abstract")}{absx}</section>
 <section id="twins">{h2("twins", "Twin histories")}
 {tx("twins", "p", pairs=f"{n['paper']:,}")}

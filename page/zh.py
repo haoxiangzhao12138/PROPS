@@ -4,12 +4,12 @@ TITLE = "视觉生成器能否保持道具的当前外观？"
 NAV = {"overview": "概览", "twins": "孪生历史", "train": "PROPS-Train", "leaderboard": "榜单", "findings": "主要发现",
        "evaluate": "评测", "citation": "引用"}
 BTN = {"paper": "论文 (PDF)", "arxiv": "arXiv", "code": "代码", "bench": "PROPS-Benchmark", "train": "PROPS-Train"}
-NOTE = "<sup>*</sup>共同一作 &nbsp; <sup>&dagger;</sup>通讯作者"
 HEAD = {"abstract": "摘要", "twins": "孪生历史", "train": "PROPS-Train", "leaderboard": "榜单", "findings": "主要发现",
         "evaluate": "评测你的模型", "citation": "引用"}
 CAP = {
-    "fig1": "一个 Resist-Stale 对。两条孪生历史的脚本完全相同。证据帧的脚本说画已经换了，但没有描述任何一幅画，开头帧里是旧的"
-            "那幅。输出呈现当前那幅画并完成请求，这一侧才通过。SenseNova-U1.5 两侧都失败，在 PROPS-Train 上微调后两侧都通过。",
+    "overview": "PROPS 与 PROPS-Train。左：按要求和子类统计的对数，以及每种要求下两个对中道具的两种外观，其中 Reuse 的裁图"
+                "取自 SenseNova-U1.5 所画的帧。右：按轨道统计的链数，其中交切链按切走的镜头数细分，合成链按变化类型细分；"
+                "以及每个轨道中一条链的关键帧，并标出其监督目标。",
     "method": "孪生历史。两条孪生历史的脚本完全相同，只有道具的外观不同，所以只凭脚本画出的同一个答案不可能同时对上两侧。"
               "下方：八个子类中孪生 A 的历史。",
     "pipeline": "在一个 Recall-Start 对上构建 PROPS。一次编辑调用同时改变证据帧和查询帧里的道具，每种外观各做一次。判官必须在两条"
