@@ -83,3 +83,6 @@ button.lang{margin-left:auto;border:1px solid #c9ced6;background:#fff;border-rad
 font:inherit;font-size:.88em;white-space:nowrap}button.lang:hover{border-color:#888}
 .subtitle{font-size:1.25em;color:#444;margin:-6px 0 12px}
 .btns a.off{background:#9aa0a8;cursor:default}.btns a.off:hover{background:#9aa0a8}
+.emails{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 16px;margin-top:8px;font-size:.84em;
+font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.emails a{color:var(--mid);text-decoration:none}.emails a:hover{color:var(--open);text-decoration:underline}
