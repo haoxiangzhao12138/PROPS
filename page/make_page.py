@@ -26,9 +26,9 @@ LINKS = {  # placeholders until the release is public
     "bench": "https://huggingface.co/datasets/CUDAOUTOFMEMORY/PROPS-Benchmark",
     "train": "https://huggingface.co/datasets/CUDAOUTOFMEMORY/PROPS-Train",
 }
-AUTHORS = ("Xiangzhao Hao<sup>1,2*</sup>, Dianyi Wang<sup>3*</sup>, Keyan Zhou<sup>1,3</sup>, Yiqian Zhang<sup>4</sup>, "
+AUTHORS = ("Xiangzhao Hao<sup>1,2*</sup>, Dianyi Wang<sup>2,3*</sup>, Keyan Zhou<sup>2,3</sup>, Yiqian Zhang<sup>4</sup>, "
            "Zefeng Zhang<sup>5</sup>, Bailin Li<sup>6</sup>, Kun Zhan<sup>6</sup>, Junchi Yan<sup>1,2&dagger;</sup>")
-AFFIL = ("<sup>1</sup>Shanghai Innovation Institute &nbsp; <sup>2</sup>Shanghai Jiao Tong University &nbsp; "
+AFFIL = ("<sup>1</sup>Shanghai Jiao Tong University &nbsp; <sup>2</sup>Shanghai Innovation Institute &nbsp; "
          "<sup>3</sup>Fudan University &nbsp; <sup>4</sup>Hangzhou Dianzi University<br><sup>5</sup>Institute of Information "
          "Engineering, University of Chinese Academy of Sciences &nbsp; <sup>6</sup>Li Auto Inc.")
 EMAILS = ["haoxiangzhao@sii.edu.cn", "dywang24@m.fudan.edu.cn", "jonaszhou01@gmail.com", "yiqian.zyq@gmail.com",
