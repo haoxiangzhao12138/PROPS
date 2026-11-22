@@ -2,7 +2,7 @@
 
     from props.data import Bench
     b = Bench("data/PROPS-Benchmark")          # after `props download` (and `props rebuild-ego` for the Ego pairs)
-    for pair in b.pairs("open"):                 # "all", "open", "phase_a" or "ready"
+    for pair in b.pairs("open"):                 # "full", "phase_a", "open", "paper", "paper_a" or "ready"
         for iid in pair["items"]:
             item = b.item(iid)                   # frames, scripts, steps to draw
             imgs = b.frames(item)                # PIL images, None where the model draws
@@ -15,7 +15,7 @@ Layout of the dataset folder:
     ego/pointers.jsonl   how to rebuild each Ego4D / Ego-Exo4D image from the official videos
     ego/patches/         RGBA patches with the edited pixels of the Ego looks
 """
-import json
+import hashlib, json, os
 from functools import lru_cache
 from pathlib import Path
 
@@ -27,21 +27,47 @@ SUBTYPES = {"Recall": ["Recall-Start", "Recall-Mid", "Recall-Far"],
             "Resist": ["Resist-Stale", "Resist-Intercut", "Resist-Lookalike"],
             "Reuse": ["Reuse-Own", "Reuse-Replaced"]}
 REUSE = set(SUBTYPES["Reuse"])
+SPLITS = {"full": lambda p: p["rebuild"] != "partial",
+          "phase_a": lambda p: p["phase_a"] and p["rebuild"] != "partial",
+          "open": lambda p: p["open"],
+          "paper": lambda p: True,
+          "paper_a": lambda p: p["phase_a"],
+          "ready": None}
 
 
-def download(root, repo=REPO_BENCH, token=None, ego=True, keep_tars=False):
-    """Download a PROPS dataset repo into `root`. The repos are private for now: pass a token with read access
-    (or log in with `huggingface-cli login`). ego=False skips the Ego pointers and patches.
+def download(root, repo=REPO_BENCH, token=None, ego=True, keep_tars=False, revision=None):
+    """Download a PROPS dataset repo into `root`. ego=False skips the Ego pointers and patches.
+    props_download.json records the repo, the revision asked for and the commit it resolved to.
     PROPS-Train ships its images as images/part-NNN.tar; they are unpacked into `root` and, unless keep_tars,
     deleted one by one. A part that was unpacked leaves images/part-NNN.tar.done and is not downloaded again."""
     from huggingface_hub import snapshot_download
     root = Path(root)
     done = sorted(p.name[:-5] for p in (root / "images").glob("part-*.tar.done")) if root.exists() else []
     ignore = ([] if ego else ["ego/*"]) + [f"images/{n}" for n in done]
-    snapshot_download(repo_id=repo, repo_type="dataset", local_dir=str(root), token=token,
-                      ignore_patterns=ignore or None, max_workers=16)
+    from huggingface_hub import HfApi
+    sha = HfApi().repo_info(repo, repo_type="dataset", revision=revision, token=token).sha  # pin the commit first
+    fetch(lambda: snapshot_download(repo_id=repo, repo_type="dataset", local_dir=str(root), token=token, revision=sha,
+                                    ignore_patterns=ignore or None, max_workers=16))
+    root.mkdir(parents=True, exist_ok=True)
+    write_json(root / "props_download.json", {"repo": repo, "revision": revision or "main", "commit": sha})
     unpack(root, keep_tars)
     return root
+
+
+def fetch(call, tries=6):
+    """Run a Hugging Face download, again after a dropped connection (files already on disk are kept, so each try
+    resumes). Access errors are not retried."""
+    import time
+    for k in range(tries):
+        try:
+            return call()
+        except Exception as e:  # noqa: BLE001
+            code = getattr(getattr(e, "response", None), "status_code", None)
+            if code in (401, 403, 404) or k == tries - 1:
+                raise
+            print(f"[props download] interrupted ({type(e).__name__}: {str(e)[:120]}); retrying in {30 * (k + 1)} s",
+                  flush=True)
+            time.sleep(30 * (k + 1))
 
 
 def unpack(root, keep_tars=False):
@@ -72,6 +98,9 @@ def _jsonl(p):
 class Bench:
     def __init__(self, root):
         self.root = Path(root)
+        if not (self.root / "pairs.jsonl").exists():
+            raise FileNotFoundError(f"no PROPS-Benchmark at {self.root} (pairs.jsonl not found); run `props download` "
+                                    "or pass --bench")
         self._pairs = _jsonl(self.root / "pairs.jsonl")
         self.by_id = {p["pair"]: p for p in self._pairs}
 
@@ -99,22 +128,89 @@ class Bench:
                 return False
         return all(self.has(s.get("crop")) for s in self.judge(pair["pair"])["sides"].values())
 
-    def pairs(self, subset="all"):
-        """all: the 2,257 pairs; open: the 1,123 pairs without Ego4D / Ego-Exo4D content (no rebuild needed);
-        phase_a: a fixed draw of 600 pairs (75 per subtype); ready: pairs on disk now."""
-        if subset == "all":
-            return list(self._pairs)
-        if subset == "open":
-            return [p for p in self._pairs if p["open"]]
-        if subset == "phase_a":
-            return [p for p in self._pairs if p["phase_a"]]
-        if subset == "ready":
+    def pairs(self, split="full"):
+        """The evaluation splits (see SPLITS):
+        full      2,231 pairs, every pair that can be rebuilt from the release (the leaderboard split)
+        phase_a   590 pairs of `full` from a fixed draw of 75 per subtype, for systems too costly to run on all pairs
+        open      1,123 pairs with no Ego4D / Ego-Exo4D frame, usable right after the download (development)
+        paper     all 2,257 pairs as in the paper; 26 of them need relit Ego frames that are not released
+        paper_a   the 600 phase-A pairs of the paper
+        ready     the pairs whose inputs are on disk now (smoke tests only, never for reporting)"""
+        if split not in SPLITS:
+            raise ValueError(f"unknown split {split!r}; one of {', '.join(SPLITS)}")
+        if split == "ready":
             return [p for p in self._pairs if self.ready(p)]
-        raise ValueError(subset)
+        return [p for p in self._pairs if SPLITS[split](p)]
 
     def frames(self, item):
         """PIL images of the item frames, None at the steps the model draws."""
         return [Image.open(self.root / f["image"]).convert("RGB") if f["image"] else None for f in item["frames"]]
+
+
+def write_json(path, obj, **kw):
+    """Write JSON through a temporary file in the same folder, so an interrupted run never leaves half a file."""
+    path = Path(path)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(obj, **kw))
+    os.replace(tmp, path)
+
+
+def read_json(path, default=None):
+    """JSON of a file, or `default` if it does not exist or cannot be parsed (then it is reported)."""
+    path = Path(path)
+    if not path.exists():
+        return default
+    try:
+        return json.loads(path.read_text())
+    except ValueError:
+        print(f"[props] warning: {path} is damaged and is ignored", flush=True)
+        return default
+
+
+_SHA = {}  # absolute path -> [size, mtime_ns, ctime_ns, inode, sha1, time of hashing]
+
+
+def sha1(path):
+    """sha1 of a file's content, or None if it does not exist. A file whose size, modification time, status change
+    time and inode are all unchanged is not read again (writing a file, or resetting its times with os.utime,
+    changes the status change time). As in git, a hash taken less than 2 s after the file last changed is not
+    trusted, because file systems with coarse timestamps can give a quick rewrite the same times. The cache can be
+    kept between runs with load_hashes / save_hashes."""
+    import time
+    p = Path(path)
+    try:
+        st = p.stat()
+    except FileNotFoundError:
+        return None
+    k, stamp = str(p.resolve()), [st.st_size, st.st_mtime_ns, st.st_ctime_ns, st.st_ino]
+    e = _SHA.get(k)
+    if e and len(e) == 6 and e[:4] == stamp and e[5] - max(stamp[1], stamp[2]) / 1e9 > 2:
+        return e[4]
+    h = hashlib.sha1(p.read_bytes()).hexdigest()
+    _SHA[k] = stamp + [h, time.time()]
+    return h
+
+
+def load_hashes(out_dir):
+    _SHA.update(read_json(Path(out_dir) / ".props_sha1.json", {}))
+
+
+def save_hashes(out_dir):
+    if Path(out_dir).exists():
+        root = str(Path(out_dir).resolve())
+        write_json(Path(out_dir) / ".props_sha1.json", {k: v for k, v in _SHA.items() if k.startswith(root)})
+
+
+def data_commit(bench):
+    """The commit of the dataset that `props download` fetched, or None."""
+    return (read_json(Path(bench) / "props_download.json", {}) or {}).get("commit")
+
+
+def note_run(out_dir, bench, **kw):
+    """Record in <out>/props_run.json the dataset commit the frames are drawn from (and what else is given)."""
+    f = Path(out_dir) / "props_run.json"
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    write_json(f, {**read_json(f, {}), "data_commit": data_commit(bench), **kw})
 
 
 def output_path(out_dir, iid, j):

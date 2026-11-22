@@ -1,8 +1,8 @@
 """Rebuild the Ego4D and Ego-Exo4D images of a PROPS dataset from the official videos.
 
-PROPS does not redistribute Ego4D or Ego-Exo4D pixels. Each such image has a row in ego/pointers.jsonl that says how
+PROPS-Benchmark and PROPS-Train do not contain Ego4D or Ego-Exo4D pixels. Each such image has a row in ego/pointers.jsonl that says how
 to make it from the official video, and this script makes it and checks it against the released perceptual hash.
-Get the videos under the Ego4D and Ego-Exo4D licences first:
+Get the videos from https://ego4d-data.org first:
     Ego4D      ego4d --datasets clips --version v2          -> <ego4d>/v2/clips/<uid>.mp4
     Ego-Exo4D  egoexo --parts takes                         -> <egoexo4d>/takes/<take>/frame_aligned_videos/<cam>.mp4
 then
@@ -18,7 +18,8 @@ Pointer rows of PROPS-Train ("recipe"; frames of at most 640 px):
     seek            seek to second t and take the first decoded frame; save as JPEG quality 85
     keyframes_fps1  ffmpeg keyframes at one frame per second, frame t (needs ffmpeg in PATH or --ffmpeg)
 Decoders differ slightly between versions, so a rebuilt frame matches the released one closely but not bit for bit.
-The check compares 64-bit pHashes and accepts a Hamming distance of at most --max-dist.
+The check compares 64-bit pHashes and accepts a Hamming distance of at most --max-dist. An image that fails the
+check, and every edit or crop made from it, is renamed to <name>.rejected, so its pairs do not count as ready.
 """
 import argparse, collections, json, os, shutil, subprocess, tempfile
 from concurrent.futures import ProcessPoolExecutor
@@ -208,6 +209,15 @@ def rebuild(data, ego4d=None, egoexo4d=None, workers=8, max_dist=8, force=False,
             status[r["image"]] = f"hash distance {-d} > {max_dist}"
         elif s.startswith("pts "):
             status[r["image"]] = "ok, nearby pts"
+    for how, need in (("edit", "base"), ("crop", "of")):  # an edit or crop of a rejected image is rejected too
+        for r in rows:
+            if r.get("how") == how and status.get(r["image"], "").startswith("ok") \
+                    and r[need] in status and not status[r[need]].startswith("ok"):
+                status[r["image"]] = f"{need} rejected"
+    for r in rows:  # move every image that failed aside, so that no pair counts as ready with it
+        q = root / r["image"]
+        if not status.get(r["image"], "").startswith(("ok", "withheld")) and q.exists():
+            os.replace(q, q.with_name(q.name + ".rejected"))
     report = {"max_dist": max_dist, "status": status, "dist": dists}
     (root / "ego" / "rebuild_report.json").write_text(json.dumps(report, indent=0))
     summary(status, dists)

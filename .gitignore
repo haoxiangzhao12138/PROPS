@@ -1,6 +1,10 @@
 __pycache__/
 *.egg-info/
-data/
-runs/
-logs/
+/.venv
+/.venv-vllm
+/data
+/models
+/runs/
+/logs/
 .judge_cache/
+.pytest_cache/
