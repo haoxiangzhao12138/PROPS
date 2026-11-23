@@ -14,7 +14,7 @@ from props.judge import content  # noqa: E402
 from props.manifest import check, export  # noqa: E402
 
 
-def make_bench(root, subtype="Recall-Start"):
+def make_bench(root, subtype="Recall-Start", rebuild="images"):
     """One pair. Recall: draw step 1 (the query). Reuse: draw the evidence step 1, keep it, draw the query 2."""
     reuse = subtype.startswith("Reuse")
     bench, out = root / "bench", root / "out"
@@ -22,7 +22,7 @@ def make_bench(root, subtype="Recall-Start"):
         p.mkdir(parents=True, exist_ok=True)
     Image.new("RGB", (32, 32), "white").save(bench / "images" / "f0.png")
     pair = {"pair": "p1", "subtype": subtype, "items": ["p1_A", "p1_B"], "cluster": "c1", "open": True,
-            "phase_a": True, "rebuild": "images"}
+            "phase_a": True, "rebuild": rebuild}
     (bench / "pairs.jsonl").write_text(json.dumps(pair) + "\n")
     sides = {}
     for v in "AB":
@@ -143,7 +143,7 @@ def test_server_errors_are_not_scores():
         done, err = scorer.score(bench, out, "u", "u")
         assert "p1" in err and "p1" not in done
         assert board(bench, out)["scored"] == 0
-        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "paper"]
+        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "full"]
         assert main(["score"] + args) == 1
         assert main(["evaluate"] + args) == 1 and not (out / "props_board.json").exists()
         Fake.fail = False
@@ -153,19 +153,19 @@ def test_server_errors_are_not_scores():
 def test_export_two_rounds_and_stale_query():
     with tempfile.TemporaryDirectory() as t:
         bench, out = make_bench(Path(t), "Reuse-Own")
-        ready, waiting, blocked, done = export(bench, out, "paper")
+        ready, waiting, blocked, done = export(bench, out, "full")
         assert (ready, waiting, blocked, done) == (2, 2, 0, 0)
         reqs = [json.loads(x) for x in (out / "requests.jsonl").read_text().splitlines()]
         assert {r["step"] for r in reqs} == {1} and len(reqs[0]["history"]) == 1
         draw(out, "p1_A", 1, "red"), draw(out, "p1_B", 1, "blue")
-        assert export(bench, out, "paper")[:2] == (2, 0)
+        assert export(bench, out, "full")[:2] == (2, 0)
         reqs = [json.loads(x) for x in (out / "requests.jsonl").read_text().splitlines()]
         assert {r["step"] for r in reqs} == {2}
         assert reqs[0]["history"][1]["image"] == str((out / "p1_A" / "1.png").resolve())
         draw(out, "p1_A", 2, "red"), draw(out, "p1_B", 2, "blue")
-        assert check(bench, out, "paper", verbose=False) == ([], [], [])
+        assert check(bench, out, "full", verbose=False) == ([], [], [])
         draw(out, "p1_A", 1, "green")  # evidence drawn again after its query
-        assert check(bench, out, "paper", verbose=False) == ([], [("p1_A", 2)], [])
+        assert check(bench, out, "full", verbose=False) == ([], [("p1_A", 2)], [])
 
 
 def test_collect_from_csv():
@@ -179,9 +179,9 @@ def test_collect_from_csv():
             w.writerows([["item", "step", "path"], ["p1_A", 1, mine / "a.jpg"], ["p1_B", 1, mine / "nope.jpg"],
                          ["p9_A", 1, mine / "a.jpg"]])
         rc = main(["collect", "--bench", str(bench), "--out", str(out), "--table", str(Path(t) / "frames.csv"),
-                   "--split", "paper"])
+                   "--split", "full"])
         assert rc == 1 and Image.open(out / "p1_A" / "1.png").size == (32, 32)
-        assert check(bench, out, "paper", verbose=False)[0] == [("p1_B", 1)]
+        assert check(bench, out, "full", verbose=False)[0] == [("p1_B", 1)]
 
 
 def test_collect_and_hand_placed_reuse_frames():
@@ -197,29 +197,29 @@ def test_collect_and_hand_placed_reuse_frames():
                 rows.append([f"p1_{v}", j, mine / f"{v}{j}.png"])
         with open(Path(t) / "frames.csv", "w", newline="") as fh:
             csv.writer(fh).writerows(rows)
-        args = ["--bench", str(bench), "--split", "paper"]
+        args = ["--bench", str(bench), "--split", "full"]
         assert main(["collect", "--out", str(out), "--table", str(Path(t) / "frames.csv")] + args) == 0
-        assert check(bench, out, "paper", verbose=False) == ([], [], [])
+        assert check(bench, out, "full", verbose=False) == ([], [], [])
         Image.new("RGB", (32, 32), "green").save(mine / "A1.png")  # evidence collected again, query not
         with open(Path(t) / "again.csv", "w", newline="") as fh:
             csv.writer(fh).writerows([["item", "step", "path"], ["p1_A", 1, mine / "A1.png"]])
         main(["collect", "--out", str(out), "--table", str(Path(t) / "again.csv")] + args)
-        assert check(bench, out, "paper", verbose=False)[1] == [("p1_A", 2)]
+        assert check(bench, out, "full", verbose=False)[1] == [("p1_A", 2)]
         (out / "p1_B" / "props_inputs.json").unlink()  # as if placed by hand
-        assert check(bench, out, "paper", verbose=False)[2] == [("p1_B", 2)]
+        assert check(bench, out, "full", verbose=False)[2] == [("p1_B", 2)]
         assert main(["check", "--outputs", str(out), "--adopt"] + args) == 1  # p1_A is still stale
-        assert check(bench, out, "paper", verbose=False)[1:] == ([("p1_A", 2)], [])
+        assert check(bench, out, "full", verbose=False)[1:] == ([("p1_A", 2)], [])
 
 
 def test_generate_records_evidence():
     with tempfile.TemporaryDirectory() as t:
         bench, out = make_bench(Path(t), "Reuse-Own")
-        args = ["generate", "--bench", str(bench), "--out", str(out), "--split", "paper",
+        args = ["generate", "--bench", str(bench), "--out", str(out), "--split", "full",
                 "--adapter", "props.adapters.baselines", "--", "--kind", "copyprev"]
         assert main(args) == 0
-        assert check(bench, out, "paper", verbose=False) == ([], [], [])
+        assert check(bench, out, "full", verbose=False) == ([], [], [])
         draw(out, "p1_B", 1, "green")
-        assert check(bench, out, "paper", verbose=False)[1] == [("p1_B", 2)]
+        assert check(bench, out, "full", verbose=False)[1] == [("p1_B", 2)]
 
 
 def test_own_crop_recut_when_models_change():
@@ -286,7 +286,7 @@ def test_score_command_checks_provenance():
         bench, out = make_bench(Path(t), "Reuse-Own")
         for v, col in (("A", "red"), ("B", "blue")):
             draw(out, f"p1_{v}", 1, col), draw(out, f"p1_{v}", 2, col)  # placed by hand, no record
-        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "paper"]
+        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "full"]
         assert main(["score"] + args) == 2 and Fake.calls == 0
         assert main(["score"] + args + ["--allow-unverified"]) == 0 and Fake.calls > 0
         assert main(["evaluate"] + args + ["--allow-unverified"]) == 0
@@ -317,8 +317,8 @@ def test_collect_query_without_its_evidence_is_unknown():
             rows.append([f"p1_{v}", 2, mine / f"{v}2.png"])
         with open(Path(t) / "q.csv", "w", newline="") as fh:
             csv.writer(fh).writerows(rows)
-        main(["collect", "--bench", str(bench), "--split", "paper", "--out", str(out), "--table", str(Path(t) / "q.csv")])
-        assert check(bench, out, "paper", verbose=False)[2] == [("p1_A", 2), ("p1_B", 2)]
+        main(["collect", "--bench", str(bench), "--split", "full", "--out", str(out), "--table", str(Path(t) / "q.csv")])
+        assert check(bench, out, "full", verbose=False)[2] == [("p1_A", 2), ("p1_B", 2)]
 
 
 def test_adopted_queries_are_scored_again():
@@ -328,10 +328,10 @@ def test_adopted_queries_are_scored_again():
         bench, out = make_bench(Path(t), "Reuse-Own")
         for v, col in (("A", "red"), ("B", "blue")):
             draw(out, f"p1_{v}", 1, col), draw(out, f"p1_{v}", 2, col)
-        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "paper"]
+        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "full"]
         assert main(["score"] + args + ["--allow-unverified"]) == 0
         assert json.loads((out / "props_scores.json").read_text())["p1"]["A"]["unverified"]
-        assert main(["check", "--bench", str(bench), "--outputs", str(out), "--split", "paper", "--adopt"]) == 0
+        assert main(["check", "--bench", str(bench), "--outputs", str(out), "--split", "full", "--adopt"]) == 0
         Fake.calls = 0
         assert main(["score"] + args) == 0 and Fake.calls > 0
         assert "unverified" not in json.loads((out / "props_scores.json").read_text())["p1"]["A"]
@@ -342,13 +342,27 @@ def test_missing_frames_block_score_and_old_board_is_removed():
     with tempfile.TemporaryDirectory() as t:
         bench, out = make_bench(Path(t))
         draw(out, "p1_A", 1, "red"), draw(out, "p1_B", 1, "blue")
-        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "paper"]
+        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "full"]
         assert main(["evaluate"] + args) == 0 and (out / "props_board.json").exists()
         (out / "p1_B" / "1.png").unlink()
         assert main(["score"] + args) == 2
         assert main(["evaluate"] + args) == 2 and not (out / "props_board.json").exists()
         assert main(["evaluate"] + args + ["--allow-missing"]) == 0
         assert json.loads((out / "props_board.json").read_text())["board"]["missing_sides"] == 1
+
+
+def test_withheld_pair_is_not_drawn_and_fails():
+    setup()
+    with tempfile.TemporaryDirectory() as t:
+        bench, out = make_bench(Path(t), rebuild="partial")
+        (bench / "images" / "f0.png").unlink()  # the relit Ego frame that is not shared
+        assert export(bench, out, "full")[:3] == (0, 0, 0)
+        assert check(bench, out, "full", verbose=False) == ([], [], [])
+        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "full"]
+        assert main(["evaluate"] + args) == 0 and Fake.calls == 0
+        row = json.loads((out / "props_board.json").read_text())["board"]
+        assert row["Overall"] is None or row["Recall-Start"] == 0.0
+        assert row["scored"] == 1 and row["withheld_pairs"] == 1 and row["missing_sides"] == 0
 
 
 def test_frames_of_another_size_are_scored_at_the_frame_size():
@@ -364,11 +378,11 @@ def test_frames_of_another_size_are_scored_at_the_frame_size():
 def test_ablation_runs_are_kept_apart():
     with tempfile.TemporaryDirectory() as t:
         bench, out = make_bench(Path(t))
-        gen = ["generate", "--bench", str(bench), "--out", str(out), "--split", "paper",
+        gen = ["generate", "--bench", str(bench), "--out", str(out), "--split", "full",
                "--adapter", "props.adapters.baselines"]
         assert main(gen + ["--ablate", "nof0", "--", "--kind", "copyprev"]) == 0
         assert main(gen + ["--", "--kind", "copyprev"]) == 2
-        row = board(bench, out, "paper")
+        row = board(bench, out, "full")
         from props.board import record
         meta = json.loads(record(bench, out, row).read_text())["meta"]
         assert not meta["complete"] and any("ablate" in w for w in meta["incomplete_because"])
@@ -391,9 +405,9 @@ def test_frames_from_another_data_version_or_rejected_inputs_are_not_scored():
     with tempfile.TemporaryDirectory() as t:
         bench, out = make_bench(Path(t))
         (bench / "props_download.json").write_text(json.dumps({"commit": "c1"}))
-        export(bench, out, "paper")
+        export(bench, out, "full")
         draw(out, "p1_A", 1, "red"), draw(out, "p1_B", 1, "blue")
-        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "paper"]
+        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "full"]
         assert main(["evaluate"] + args) == 0
         (bench / "props_download.json").write_text(json.dumps({"commit": "c2"}))
         assert main(["score"] + args) == 2 and not (out / "props_board.json").exists()

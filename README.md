@@ -31,7 +31,7 @@ and the `gh-pages` branch holds the built project page.
 git clone https://github.com/haoxiangzhao12138/PROPS && cd PROPS
 bash scripts/setup.sh                 # props in .venv, PROPS-Benchmark in data/ (3.0 GB)
 source .venv/bin/activate
-props board --outputs leaderboard/runs/sensenova_full --split paper --ci
+props board --outputs leaderboard/runs/sensenova_full --ci
 ```
 
 The last command recomputes the SenseNova-U1.5 row of the paper (Overall 26.7) from its stored scores. It needs no
@@ -118,17 +118,16 @@ included. [docs/scoring.md](docs/scoring.md) gives the scoring rules.
 
 ## Splits
 
-| split | pairs | frames to draw | needs Ego4D | use |
-|---|---:|---:|---|---|
-| `full` | 2,231 | 5,680 | yes | the leaderboard (default) |
-| `phase_a` | 590 | 1,480 | yes | the leaderboard, for systems too costly to run on every pair; 590 of the 600 phase-A pairs of the paper |
-| `open` | 1,123 | 3,022 | no | development, usable right after the download |
-| `paper`, `paper_a` | 2,257, 600 | | | the numbers of the paper, from stored scores only |
+| split | pairs | needs Ego4D | use |
+|---|---:|---|---|
+| `full` | 2,257 | yes | the leaderboard (default) |
+| `phase_a` | 600 | yes | the leaderboard, for systems too costly to run on every pair; 75 pairs per subtype |
+| `open` | 1,123 | no | development, usable right after the download |
 
 Ego4D and Ego-Exo4D frames are not in the download. It has pointers to them, and `props rebuild-ego`
-rebuilds them from your own copy of those datasets ([docs/ego.md](docs/ego.md)). `full` and `phase_a` leave out the
-26 pairs of the paper whose history holds a relit Ego4D frame. `open` needs no Ego4D and ranks the 29 open systems
-as `full` does, with Kendall τ = 0.96.
+rebuilds them from your own copy of those datasets ([docs/ego.md](docs/ego.md)). The history of 26 Resist-Intercut
+pairs, 10 of them in `phase_a`, holds a relit Ego4D frame that is not shared, so a run does not draw them and they
+count as failed. `open` needs no Ego4D and ranks the 29 open systems as `full` does, with Kendall τ = 0.96.
 
 ## Leaderboard
 
@@ -142,56 +141,56 @@ weights of the four models fine-tuned on PROPS-Train are not released.
 | System | Full | Phase A |
 |---|---:|---:|
 | *Unified multimodal models* | | |
-| SenseNova-U1.5 | 26.6 | 29.7 |
-| Emu3.5 | 16.0 | 15.6 |
-| BAGEL | 4.1 | 5.1 |
+| SenseNova-U1.5 | 26.7 | 29.8 |
+| Emu3.5 | 15.9 | 15.6 |
+| BAGEL | 4.0 | 5.0 |
 | HiDream-O1 | 1.6 | 1.1 |
 | LLaDA2-Uni | 1.4 | 0.9 |
 | OmniGen2 | 0.7 | 0.6 |
-| Lumina-DiMOO | 0.1 | 0.2 |
+| Lumina-DiMOO | 0.1 | 0.1 |
 | Janus-Pro | 0.0 | 0.0 |
 | Show-o2 | 0.0 | 0.0 |
 | *Image generators and editors* | | |
-| FLUX.3-klein | 30.6 | 29.3 |
-| FLUX.2-klein | 3.1 | 3.1 |
-| VINCIE | 2.9 | 4.2 |
-| Qwen-Image-2.1 | 2.2 | 2.6 |
+| FLUX.3-klein | 30.4 | 29.0 |
+| FLUX.2-klein | 3.1 | 3.0 |
+| VINCIE | 2.9 | 4.1 |
+| Qwen-Image-2.1 | 2.2 | 2.5 |
 | FLUX.2-dev | 2.0 | 2.2 |
 | FireRed-Edit | 1.5 | 1.9 |
 | Qwen-Image-Edit | 0.8 | 1.0 |
 | FLUX.1-Kontext | 0.0 | 0.0 |
 | *Agents (open planner + editor)* | | |
-| Qwen3.8 + Qwen-Image-Edit | 19.6 | 18.9 |
-| Qwen3.8 + Qwen-Image-2.1 | 17.0 | 17.6 |
+| Qwen3.8 + Qwen-Image-Edit | 19.6 | 19.1 |
+| Qwen3.8 + Qwen-Image-2.1 | 16.9 | 17.6 |
 | *Keyframe-conditioned video models* | | |
-| LTX-2.5 | 8.5 | 7.6 |
+| LTX-2.5 | 8.3 | 7.5 |
 | Wan-VACE | 0.8 | 0.9 |
 | StoryMem | 0.4 | 0.8 |
 | HunyuanVideo-I2V | 0.1 | 0.2 |
 | Wan-TI2V | 0.0 | 0.1 |
 | Wan-I2V | 0.0 | 0.0 |
 | *Closed image generators* | | |
-| Nano Banana 2 | | 50.7 |
-| Seedream 5 | | 46.0 |
-| Nano Banana Pro | | 39.5 |
+| Nano Banana 2 | | 50.4 |
+| Seedream 5 | | 45.7 |
+| Nano Banana Pro | | 39.3 |
 | *Agents with a closed planner or editor* | | |
-| GPT-5.6 + GPT Image 2.5 | | 71.1 |
-| Qwen3.8-Max + Qwen-Image-Edit | | 61.1 |
+| GPT-5.6 + GPT Image 2.5 | | 71.0 |
+| Qwen3.8-Max + Qwen-Image-Edit | | 60.9 |
 | Gemini-3.1-Pro + Qwen-Image-Edit | | 60.2 |
-| Kimi-K3 + Qwen-Image-Edit | | 56.5 |
-| GPT-5.6 + Qwen-Image-Edit | | 56.2 |
-| Gemini-3.1-Pro + Qwen-Image-2.1 | | 55.0 |
-| Kimi-K3 (no images) + Qwen-Image-Edit | | 42.4 |
+| Kimi-K3 + Qwen-Image-Edit | | 56.7 |
+| GPT-5.6 + Qwen-Image-Edit | | 55.7 |
+| Gemini-3.1-Pro + Qwen-Image-2.1 | | 55.2 |
+| Kimi-K3 (no images) + Qwen-Image-Edit | | 42.2 |
 | Qwen3.8 + GPT Image 2.5 | | 29.3 |
 | *Agents with a smaller open planner or another open editor* | | |
 | Qwen3.8 + FLUX.3-klein | | 20.2 |
-| Qwen3.5-9B + FLUX.3-klein | | 19.8 |
-| Qwen3.5-9B + FLUX.3-klein, no upsampler | | 19.1 |
-| Qwen3.5-9B + Qwen-Image-Edit | | 18.8 |
+| Qwen3.5-9B + FLUX.3-klein | | 19.7 |
+| Qwen3.5-9B + Qwen-Image-Edit | | 19.0 |
+| Qwen3.5-9B + FLUX.3-klein, no upsampler | | 18.9 |
 | *Fine-tuned on PROPS-Train* | | |
-| SenseNova-U1.5 + PROPS-Train | 46.8 | 49.0 |
-| BAGEL + PROPS-Train | 15.0 | 14.9 |
-| Qwen-Image-2.1 + PROPS-Train (LoRA) | 11.3 | 11.3 |
+| SenseNova-U1.5 + PROPS-Train | 47.0 | 49.4 |
+| BAGEL + PROPS-Train | 14.9 | 14.9 |
+| Qwen-Image-2.1 + PROPS-Train (LoRA) | 11.2 | 11.3 |
 | Qwen-Image-Edit + PROPS-Train (LoRA) | 10.8 | 8.7 |
 <!-- leaderboard:end -->
 

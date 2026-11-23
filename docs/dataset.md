@@ -18,7 +18,7 @@ data/PROPS-Benchmark/
 from props.data import Bench
 
 b = Bench("data/PROPS-Benchmark")
-for pair in b.pairs("open"):              # full, phase_a, open, paper or paper_a
+for pair in b.pairs("open"):              # full, phase_a or open
     for iid in pair["items"]:             # the two twins, <pair>_A and <pair>_B
         item = b.item(iid)
         frames = b.frames(item)           # PIL images; None at the steps the model draws
@@ -42,7 +42,7 @@ scores; the images are needed to generate.
 |---|---|
 | `subtype`, `group` | one of the eight subtypes below and its group |
 | `gap` | steps between the last frame that shows the look and the query |
-| `phase_a` | one of the 600 pairs of the paper's phase A, a fixed random draw of 75 per subtype; the `phase_a` split keeps 590 of them |
+| `phase_a` | one of the 600 pairs of phase A, a fixed random draw of 75 per subtype |
 | `cluster` | the group of source videos that the bootstrap resamples (329 clusters) |
 | `sources` | the video datasets the frames come from |
 | `needs_ego`, `open` | whether the pair has an Ego4D or Ego-Exo4D frame; `open` pairs have none |

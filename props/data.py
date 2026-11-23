@@ -2,7 +2,7 @@
 
     from props.data import Bench
     b = Bench("data/PROPS-Benchmark")          # after `props download` (and `props rebuild-ego` for the Ego pairs)
-    for pair in b.pairs("open"):                 # "full", "phase_a", "open", "paper", "paper_a" or "ready"
+    for pair in b.pairs("open"):                 # "full", "phase_a", "open" or "ready"
         for iid in pair["items"]:
             item = b.item(iid)                   # frames, scripts, steps to draw
             imgs = b.frames(item)                # PIL images, None where the model draws
@@ -27,11 +27,9 @@ SUBTYPES = {"Recall": ["Recall-Start", "Recall-Mid", "Recall-Far"],
             "Resist": ["Resist-Stale", "Resist-Intercut", "Resist-Lookalike"],
             "Reuse": ["Reuse-Own", "Reuse-Replaced"]}
 REUSE = set(SUBTYPES["Reuse"])
-SPLITS = {"full": lambda p: p["rebuild"] != "partial",
-          "phase_a": lambda p: p["phase_a"] and p["rebuild"] != "partial",
+SPLITS = {"full": lambda p: True,
+          "phase_a": lambda p: p["phase_a"],
           "open": lambda p: p["open"],
-          "paper": lambda p: True,
-          "paper_a": lambda p: p["phase_a"],
           "ready": None}
 
 
@@ -128,13 +126,16 @@ class Bench:
                 return False
         return all(self.has(s.get("crop")) for s in self.judge(pair["pair"])["sides"].values())
 
+    def withheld(self, pair):
+        """True for the 26 pairs whose history holds a relit Ego4D frame that cannot be shared, unless its inputs are
+        on disk anyway. A run cannot draw them, so they count as failed."""
+        return pair["rebuild"] == "partial" and not self.ready(pair)
+
     def pairs(self, split="full"):
         """The evaluation splits (see SPLITS):
-        full      2,231 pairs, every pair that can be rebuilt from the release (the leaderboard split)
-        phase_a   590 pairs of `full` from a fixed draw of 75 per subtype, for systems too costly to run on all pairs
+        full      all 2,257 pairs (the leaderboard)
+        phase_a   600 pairs, a fixed draw of 75 per subtype, for systems too costly to run on all pairs
         open      1,123 pairs with no Ego4D / Ego-Exo4D frame, usable right after the download (development)
-        paper     all 2,257 pairs as in the paper; 26 of them need relit Ego frames that are not released
-        paper_a   the 600 phase-A pairs of the paper
         ready     the pairs whose inputs are on disk now (smoke tests only, never for reporting)"""
         if split not in SPLITS:
             raise ValueError(f"unknown split {split!r}; one of {', '.join(SPLITS)}")

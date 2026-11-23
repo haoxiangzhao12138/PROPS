@@ -40,6 +40,7 @@ The `rebuild` field of `pairs.jsonl` says it:
 | `no_gt` | 203 | every model input and reference crop rebuilds; the true target frames are relit Ego frames and are withheld. Scoring does not use them |
 | `partial` | 26 | Resist-Intercut pairs whose history holds a relit Ego frame, which no pointer can rebuild |
 
-The `full` and `phase_a` splits contain every pair except the 26 `partial` ones, so after the rebuild every pair
-of these splits can be drawn and scored. When an input image is missing, `props export` lists how many frames it
-blocks and `props generate` stops before drawing anything.
+After the rebuild every pair can be drawn and scored except the 26 `partial` ones, 10 of them in `phase_a`.
+`props export` and `props generate` skip them, and `props score` counts them as failed. The runs on the leaderboard
+had these frames and were scored on every pair. When an input image is missing, `props export` lists how many
+frames it blocks and `props generate` stops before drawing anything.

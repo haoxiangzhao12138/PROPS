@@ -17,7 +17,7 @@ from props.board import board  # noqa: E402
 from props.data import SUBTYPES  # noqa: E402
 
 LB = ROOT / "leaderboard"
-SPLITS = {"full": "full", "phase_a": "phase_a", "paper": "full", "paper_a": "phase_a"}  # split -> systems.json tag
+SPLITS = {"full": "full", "phase_a": "phase_a"}  # split -> systems.json tag
 COLS = ["Overall", "Recall", "Resist", "Reuse"] + [s for ss in SUBTYPES.values() for s in ss] + ["Follow", "Exec"]
 SHORT = {s: s.split("-")[1] for ss in SUBTYPES.values() for s in ss}
 
@@ -97,11 +97,7 @@ def main():
            "the three groups, with a 95% interval from a bootstrap over source-video clusters. Follow and Exec are",
            "diagnostic rates over sides. Recompute every number with `python scripts/make_leaderboard.py`.", "",
            f"## Full benchmark ({n['full']:,} pairs, open systems)", "", table(data, "full", COLS), "",
-           f"## Phase A ({n['phase_a']:,} pairs, every system)", "", table(data, "phase_a", COLS), "",
-           f"## As in the paper ({n['paper']:,} and {n['paper_a']:,} pairs)", "",
-           "The paper scores all 2,257 pairs, and the official splits leave out the 26 whose history holds a relit",
-           "Ego4D frame. `--split paper` and `--split paper_a` give the numbers of the paper.", "",
-           table(data, "paper", COLS[:4]), "", table(data, "paper_a", COLS[:4]), ""]
+           f"## Phase A ({n['phase_a']:,} pairs, every system)", "", table(data, "phase_a", COLS), ""]
     (LB / "README.md").write_text("\n".join(doc))
     readme = ROOT / "README.md"
     s = readme.read_text()

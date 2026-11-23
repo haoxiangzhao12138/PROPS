@@ -78,7 +78,7 @@ def save(img, path, size):
 def run(bench_dir, adapter, out, split="full", shard="0/1", limit=0, how="none", adapter_args=()):
     from .manifest import note_inputs, own_inputs
     b = Bench(bench_dir)
-    pairs = b.pairs(split)
+    pairs = [p for p in b.pairs(split) if not b.withheld(p)]
     absent = [p["pair"] for p in pairs if not b.ready(p)]
     if absent:
         print(f"[props generate] {len(absent)} pairs of split {split} have input images that are not on disk "

@@ -3,13 +3,8 @@
 A run folder holds one PNG per drawn step: `runs/<name>/<item>/<step>.png`. Each item has the steps listed in its
 `draw` field (docs/dataset.md). Recall and Resist items draw one step, the query. Reuse items draw two: the evidence
 step first, then the query, whose history holds the evidence frame the model drew. The split decides which items
-are drawn; the leaderboard uses `full` or `phase_a`, and `open` works without Ego4D.
-
-| split | frames to draw |
-|---|---:|
-| `full` | 5,680 |
-| `phase_a` | 1,480 |
-| `open` | 3,022 |
+are drawn; the leaderboard uses `full` or `phase_a`, and `open` works without Ego4D. `props export` prints how many
+frames a split needs.
 
 There are three ways to fill a run folder. All of them end with `props check --outputs runs/<name>`, which lists the
 frames that are still missing.

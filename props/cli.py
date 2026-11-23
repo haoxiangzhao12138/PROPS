@@ -16,7 +16,7 @@ Every command takes --bench (default data/PROPS-Benchmark). Exit code 0 means do
 import argparse, json, os, sys
 from pathlib import Path
 
-SPLITS = ["full", "phase_a", "open", "paper", "paper_a"]  # `ready` is for smoke tests of `props generate` only
+SPLITS = ["full", "phase_a", "open"]  # `ready` is for smoke tests of `props generate` only
 
 
 def _download(a):
@@ -84,7 +84,7 @@ def _inputs_ok(a, who):
               f"at {now[:10]}; draw them again from this version, or download the old one with --revision")
         return False
     b = Bench(a.bench)
-    absent = [p["pair"] for p in b.pairs(a.split) if not b.ready(p)]
+    absent = [p["pair"] for p in b.pairs(a.split) if not b.ready(p) and not b.withheld(p)]
     if absent:
         print(f"[props {who}] {len(absent)} pairs have input images that are not on disk (first {absent[0]}), so "
               "nothing was scored. Run `props rebuild-ego`, or check its report for rejected images.")
@@ -155,7 +155,7 @@ def parser():
 
     def split(p, extra=()):
         p.add_argument("--split", default="full", choices=SPLITS + list(extra),
-                       help="full (leaderboard), phase_a, open (no Ego4D needed), paper, paper_a; see props/data.py")
+                       help="full (leaderboard), phase_a, open (no Ego4D needed); see props/data.py")
 
     def servers(p):
         p.add_argument("--judge", required=True, help="OpenAI-compatible base URL(s) of Gemma-4-31B-it, comma separated")

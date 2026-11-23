@@ -239,8 +239,8 @@ Reuse are the means of their subtypes, and Overall is the mean of the three. The
 bootstrap interval over source-video clusters. Follow is the rate of sides that show their own look and Exec the rate
 of sides that carry out the request. † marks a closed model or planner; closed systems were run on phase A only.
 Names in pink are fine-tuned on PROPS-Train, and the small number after their Overall is the gain over the base
-model. Hover a cell for the details of a system; a click on a column sorts by it. The official splits leave out the
-26 pairs of the paper whose history holds a relit Ego4D frame. To add a row, open an issue in the code repository.""",
+model. Hover a cell for the details of a system; a click on a column sorts by it. To add a row, open an issue in
+the code repository.""",
     "scatter": "Overall against Exec on phase A",
     "sc_note": """Every system on the {n} pairs of phase A, where open and closed systems share the same pairs. Most
 systems carry out the request on far more sides than they pass pairs: they draw the twin's look or neither look. The
@@ -281,7 +281,7 @@ def page(out):
 <section id="overview">{fig("overview")}
 {h2("abstract", "Abstract")}{absx}</section>
 <section id="twins">{h2("twins", "Twin histories")}
-{tx("twins", "p", pairs=f"{n['paper']:,}")}
+{tx("twins", "p", pairs=f"{n['full']:,}")}
 {cards(D)}{fig("method")}{fig("pipeline")}</section>
 <section id="train">{h2("train", "PROPS-Train")}
 {tx("train", "p")}

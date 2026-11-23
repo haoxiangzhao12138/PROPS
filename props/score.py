@@ -190,9 +190,19 @@ async def score_async(bench, out, judge_url, grounder_url, split="full", judge_m
     grounder = Client(grounder_url, grounder_model, concurrency=conc, cache=cache, ident=wg)
     f, ff = Path(out) / "props_scores.json", Path(out) / "props_scores.fp.json"
     done, fps = read_json(f, {}), read_json(ff, {})
-    want = {p["pair"]: fingerprint(b, out, p, wj, wg) for p in b.pairs(split)}
-    todo = [p for p in b.pairs(split) if p["pair"] not in done or fps.get(p["pair"]) != want[p["pair"]]]
-    print(f"[props score] {len(todo)} of {len(want)} pairs to score", flush=True)
+    held = [p for p in b.pairs(split) if b.withheld(p)]  # cannot be drawn: failed, and nothing to ask the judge
+    for p in held:
+        done[p["pair"]] = {v: {**FAIL, "withheld": True, "n_change": 0} for v in "AB"}
+        fps[p["pair"]] = f"withheld/{RULES}"
+    if held:
+        write_json(f, done, indent=1)
+        write_json(ff, fps, indent=0)
+    rest = [p for p in b.pairs(split) if not b.withheld(p)]
+    want = {p["pair"]: fingerprint(b, out, p, wj, wg) for p in rest}
+    todo = [p for p in rest if p["pair"] not in done or fps.get(p["pair"]) != want[p["pair"]]]
+    print(f"[props score] {len(todo)} of {len(want)} pairs to score"
+          + (f"; {len(held)} pairs need a relit Ego4D frame that is not shared and count as failed" if held else ""),
+          flush=True)
     errors = {}
     for n in range(0, len(todo), 200):  # write the scores every 200 pairs
         chunk = todo[n:n + 200]

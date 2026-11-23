@@ -91,6 +91,8 @@ def requests(bench, out, split="full"):
     b, out = Bench(bench), Path(out)
     ready, waiting, blocked, done = [], [], [], 0
     for p in b.pairs(split):
+        if b.withheld(p):
+            continue
         for iid in p["items"]:
             it = b.item(iid)
             for j in it["draw"]:
@@ -129,6 +131,11 @@ def export(bench, out, split="full"):
         note_inputs(out, r["item"], r["step"], r["own"])
     note_run(out, bench)
     print(f"[props export] split {split}: {len(ready)} frames to draw now -> {f}")
+    b = Bench(bench)
+    held = sum(b.withheld(p) for p in b.pairs(split))
+    if held:
+        print(f"[props export] {held} pairs need a relit Ego4D frame that is not shared; they are not drawn and count "
+              "as failed")
     if waiting:
         print(f"[props export] {len(waiting)} Reuse queries wait for the evidence frames in this list; "
               "draw them, then run `props export` again")
@@ -199,6 +206,8 @@ def check(bench, out, split="full", verbose=True, adopt=False):
     load_hashes(out)
     miss, stale, unknown, total = [], [], [], 0
     for p in b.pairs(split):
+        if b.withheld(p):
+            continue
         for iid in p["items"]:
             it = b.item(iid)
             for j in it["draw"]:
