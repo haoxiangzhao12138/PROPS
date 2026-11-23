@@ -6,8 +6,7 @@ two scoring models. A row of the leaderboard always names the versions it was sc
 
 ## 1.0.0
 
-- PROPS-Benchmark: 2,257 pairs. Splits `full` (2,257 pairs), `phase_a` (600) and `open` (1,123). The history of 26
-  pairs holds a relit Ego4D frame that is not shared; a run does not draw them and they count as failed.
+- PROPS-Benchmark: 2,257 pairs. Splits `full` (all 2,257 pairs) and `phase_a` (600).
 - PROPS-Train: 80,250 chains, 120,339 training and 6,277 validation targets.
 - Both datasets are tagged `v1.0.0` on Hugging Face, and `scripts/setup.sh` downloads this tag.
 - Scoring protocol `props-score-v1`: judge google/gemma-4-31B-it at 842da37, grounder Qwen/Qwen3.8-27B at 1d4bf0f,

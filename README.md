@@ -29,13 +29,13 @@ and the `gh-pages` branch holds the built project page.
 
 ```bash
 git clone https://github.com/haoxiangzhao12138/PROPS && cd PROPS
-bash scripts/setup.sh                 # props in .venv, PROPS-Benchmark in data/ (3.0 GB)
+bash scripts/setup.sh                 # props in .venv, PROPS-Benchmark in data/ (3.2 GB)
 source .venv/bin/activate
 props board --outputs leaderboard/runs/sensenova_full --ci
 ```
 
 The last command recomputes the SenseNova-U1.5 row of the paper (Overall 26.7) from its stored scores. It needs no
-GPU and checks that the install and the download work. PROPS-Benchmark has 13,747 small files; behind an HTTP proxy, `export HF_HUB_DISABLE_XET=1` speeds up their download.
+GPU and checks that the install and the download work. PROPS-Benchmark has 13,919 small files; behind an HTTP proxy, `export HF_HUB_DISABLE_XET=1` speeds up their download.
 
 ## Evaluate your model
 
@@ -122,12 +122,9 @@ included. [docs/scoring.md](docs/scoring.md) gives the scoring rules.
 |---|---:|---|---|
 | `full` | 2,257 | yes | the leaderboard (default) |
 | `phase_a` | 600 | yes | the leaderboard, for systems too costly to run on every pair; 75 pairs per subtype |
-| `open` | 1,123 | no | development, usable right after the download |
 
 Ego4D and Ego-Exo4D frames are not in the download. It has pointers to them, and `props rebuild-ego`
-rebuilds them from your own copy of those datasets ([docs/ego.md](docs/ego.md)). The history of 26 Resist-Intercut
-pairs, 10 of them in `phase_a`, holds a relit Ego4D frame that is not shared, so a run does not draw them and they
-count as failed. `open` needs no Ego4D and ranks the 29 open systems as `full` does, with Kendall τ = 0.96.
+rebuilds them from your own copy of those datasets ([docs/ego.md](docs/ego.md)).
 
 ## Leaderboard
 

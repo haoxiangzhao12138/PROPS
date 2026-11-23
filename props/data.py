@@ -2,13 +2,13 @@
 
     from props.data import Bench
     b = Bench("data/PROPS-Benchmark")          # after `props download` (and `props rebuild-ego` for the Ego pairs)
-    for pair in b.pairs("open"):                 # "full", "phase_a", "open" or "ready"
+    for pair in b.pairs("phase_a"):              # "full" or "phase_a"
         for iid in pair["items"]:
             item = b.item(iid)                   # frames, scripts, steps to draw
             imgs = b.frames(item)                # PIL images, None where the model draws
 
 Layout of the dataset folder:
-    pairs.jsonl          one pair per line (subtype, group, gap, phase_a, cluster, items, sources, needs_ego, rebuild)
+    pairs.jsonl          one pair per line (subtype, group, gap, phase_a, cluster, items, sources, needs_ego)
     items/<pair>_<A|B>.json   model input of one side
     judge/<pair>.json    scoring material of both sides (never shown to the model)
     images/              every image except Ego4D / Ego-Exo4D frames, named by sha1
@@ -28,9 +28,7 @@ SUBTYPES = {"Recall": ["Recall-Start", "Recall-Mid", "Recall-Far"],
             "Reuse": ["Reuse-Own", "Reuse-Replaced"]}
 REUSE = set(SUBTYPES["Reuse"])
 SPLITS = {"full": lambda p: True,
-          "phase_a": lambda p: p["phase_a"],
-          "open": lambda p: p["open"],
-          "ready": None}
+          "phase_a": lambda p: p["phase_a"]}
 
 
 def download(root, repo=REPO_BENCH, token=None, ego=True, keep_tars=False, revision=None):
@@ -54,18 +52,26 @@ def download(root, repo=REPO_BENCH, token=None, ego=True, keep_tars=False, revis
 
 def fetch(call, tries=6):
     """Run a Hugging Face download, again after a dropped connection (files already on disk are kept, so each try
-    resumes). Access errors are not retried."""
+    resumes). Access errors are not retried. Hugging Face limits the number of files per five minutes, so when it
+    says so (HTTP 429) the download waits five minutes and goes on, as often as it takes."""
     import time
-    for k in range(tries):
+    k = 0
+    while True:
         try:
             return call()
         except Exception as e:  # noqa: BLE001
             code = getattr(getattr(e, "response", None), "status_code", None)
-            if code in (401, 403, 404) or k == tries - 1:
+            if code == 429:
+                print("[props download] Hugging Face asks to wait (too many files in five minutes); going on in 5 min",
+                      flush=True)
+                time.sleep(300)
+                continue
+            k += 1
+            if code in (401, 403, 404) or k == tries:
                 raise
-            print(f"[props download] interrupted ({type(e).__name__}: {str(e)[:120]}); retrying in {30 * (k + 1)} s",
+            print(f"[props download] interrupted ({type(e).__name__}: {str(e)[:120]}); retrying in {30 * k} s",
                   flush=True)
-            time.sleep(30 * (k + 1))
+            time.sleep(30 * k)
 
 
 def unpack(root, keep_tars=False):
@@ -126,21 +132,12 @@ class Bench:
                 return False
         return all(self.has(s.get("crop")) for s in self.judge(pair["pair"])["sides"].values())
 
-    def withheld(self, pair):
-        """True for the 26 pairs whose history holds a relit Ego4D frame that cannot be shared, unless its inputs are
-        on disk anyway. A run cannot draw them, so they count as failed."""
-        return pair["rebuild"] == "partial" and not self.ready(pair)
-
     def pairs(self, split="full"):
-        """The evaluation splits (see SPLITS):
-        full      all 2,257 pairs (the leaderboard)
-        phase_a   600 pairs, a fixed draw of 75 per subtype, for systems too costly to run on all pairs
-        open      1,123 pairs with no Ego4D / Ego-Exo4D frame, usable right after the download (development)
-        ready     the pairs whose inputs are on disk now (smoke tests only, never for reporting)"""
+        """The two splits of the leaderboard (see SPLITS):
+        full      all 2,257 pairs
+        phase_a   600 pairs, a fixed draw of 75 per subtype, for systems too costly to run on all pairs"""
         if split not in SPLITS:
             raise ValueError(f"unknown split {split!r}; one of {', '.join(SPLITS)}")
-        if split == "ready":
-            return [p for p in self._pairs if self.ready(p)]
         return [p for p in self._pairs if SPLITS[split](p)]
 
     def frames(self, item):

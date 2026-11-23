@@ -78,12 +78,16 @@ def save(img, path, size):
 def run(bench_dir, adapter, out, split="full", shard="0/1", limit=0, how="none", adapter_args=()):
     from .manifest import note_inputs, own_inputs
     b = Bench(bench_dir)
-    pairs = [p for p in b.pairs(split) if not b.withheld(p)]
-    absent = [p["pair"] for p in pairs if not b.ready(p)]
+    pairs = b.pairs(split)
+    iids = [i for p in pairs for i in p["items"]]
+    si, sn = map(int, shard.split("/"))
+    mine = [i for n, i in enumerate(iids) if n % sn == si]
+    mine = mine[:limit] if limit else mine
+    absent = [p["pair"] for p in pairs if set(p["items"]) & set(mine) and not b.ready(p)]
     if absent:
-        print(f"[props generate] {len(absent)} pairs of split {split} have input images that are not on disk "
-              f"(first {absent[0]}). Check that `props download` finished, run `props rebuild-ego` for the "
-              "Ego4D / Ego-Exo4D pairs, or use --split open.")
+        print(f"[props generate] {len(absent)} pairs to draw have input images that are not on disk "
+              f"(first {absent[0]}). Check that `props download` finished and run `props rebuild-ego` for the "
+              "Ego4D / Ego-Exo4D frames.")
         return 2
     from .data import read_json
     rf = Path(out) / "props_run.json"
@@ -94,10 +98,6 @@ def run(bench_dir, adapter, out, split="full", shard="0/1", limit=0, how="none",
     from .data import note_run
     note_run(out, bench_dir, ablate=how, adapter=adapter)
     model = load_adapter(adapter, list(adapter_args))
-    iids = [i for p in pairs for i in p["items"]]
-    si, sn = map(int, shard.split("/"))
-    mine = [i for n, i in enumerate(iids) if n % sn == si]
-    mine = mine[:limit] if limit else mine
     print(f"[props generate] {adapter}: {len(mine)} items (shard {shard}, split {split}) -> {out}", flush=True)
     t0, n_done, n_fail = time.time(), 0, 0
     for iid in mine:

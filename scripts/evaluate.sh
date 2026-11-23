@@ -9,7 +9,7 @@
 #   bash scripts/evaluate.sh runs/mymodel --judge URL --grounder URL   # servers already running elsewhere
 #
 # Options:
-#   --split S        full (default), phase_a or open
+#   --split S        full (default) or phase_a
 #   --bench DIR      PROPS-Benchmark folder (default data/PROPS-Benchmark)
 #   --gpus LIST      GPUs for the servers, the first half for the judge and the second half for the grounder
 #   --tp N           GPUs per server (default 1, which needs 80 GB per GPU)

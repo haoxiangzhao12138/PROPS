@@ -3,8 +3,7 @@
 A run folder holds one PNG per drawn step: `runs/<name>/<item>/<step>.png`. Each item has the steps listed in its
 `draw` field (docs/dataset.md). Recall and Resist items draw one step, the query. Reuse items draw two: the evidence
 step first, then the query, whose history holds the evidence frame the model drew. The split decides which items
-are drawn; the leaderboard uses `full` or `phase_a`, and `open` works without Ego4D. `props export` prints how many
-frames a split needs.
+are drawn: `full` or `phase_a`. `props export` prints how many frames a split needs.
 
 There are three ways to fill a run folder. All of them end with `props check --outputs runs/<name>`, which lists the
 frames that are still missing.
@@ -103,7 +102,7 @@ Copy [props/adapters/template.py](../props/adapters/template.py) to start.
 
 ```bash
 # smoke test without a model: copy the previous frame on 20 items
-props generate --adapter props.adapters.baselines --out runs/copyprev --split open --limit 20 -- --kind copyprev
+props generate --adapter props.adapters.baselines --out runs/copyprev --limit 20 -- --kind copyprev
 # one process per GPU
 for i in 0 1 2 3 4 5 6 7; do
   CUDA_VISIBLE_DEVICES=$i props generate --adapter my_model.py --out runs/mymodel --shard $i/8 -- --path /models/x &

@@ -59,7 +59,7 @@ The full benchmark has 3.8 times as many pairs and takes about that much longer.
 
 | file in the run folder | content |
 |---|---|
-| `props_scores.json` | the result of every scored pair: per side `follow`, `exec`, `ok`, and `missing`, `unverified` or `withheld` when they apply |
+| `props_scores.json` | the result of every scored pair: per side `follow`, `exec`, `ok`, and `missing` or `unverified` when they apply |
 | `props_scores.fp.json` | what each result was computed from: the sha1 of the frames, crops, item and judge files it read, the provenance of its Reuse queries, the scoring protocol and prompts, and the name, weights and vLLM version of both models |
 | `props_score_errors.json` | pairs that could not be scored because a request failed |
 | `props_board.json` | the board row (written by `props evaluate`) with the code version and commit, protocol, benchmark commit, and the weights and vLLM version of every server |

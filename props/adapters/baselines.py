@@ -4,7 +4,7 @@
 kinds:
     copy0     frame 0 copied: keeps a look seen at frame 0 but does not carry out the script (fails Exec)
     copyprev  the previous frame copied (fails Exec)
-    gt        the true frame (needs --bench; only for the pairs whose true frames ship, see pairs.jsonl "rebuild")
+    gt        the true frame (needs --bench)
 On the full benchmark copy0 scores 0.1% and copyprev 0.0%.
 """
 import argparse

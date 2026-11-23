@@ -18,7 +18,7 @@ data/PROPS-Benchmark/
 from props.data import Bench
 
 b = Bench("data/PROPS-Benchmark")
-for pair in b.pairs("open"):              # full, phase_a or open
+for pair in b.pairs("phase_a"):           # full or phase_a
     for iid in pair["items"]:             # the two twins, <pair>_A and <pair>_B
         item = b.item(iid)
         frames = b.frames(item)           # PIL images; None at the steps the model draws
@@ -34,8 +34,7 @@ scores; the images are needed to generate.
 
 ```json
 {"pair": "p0001", "subtype": "Recall-Start", "group": "Recall", "gap": 3, "phase_a": true,
- "cluster": "c0067", "items": ["p0001_A", "p0001_B"], "sources": ["Ego4D"], "needs_ego": true,
- "open": false, "rebuild": "full"}
+ "cluster": "c0067", "items": ["p0001_A", "p0001_B"], "sources": ["Ego4D"], "needs_ego": true}
 ```
 
 | field | meaning |
@@ -45,8 +44,7 @@ scores; the images are needed to generate.
 | `phase_a` | one of the 600 pairs of phase A, a fixed random draw of 75 per subtype |
 | `cluster` | the group of source videos that the bootstrap resamples (329 clusters) |
 | `sources` | the video datasets the frames come from |
-| `needs_ego`, `open` | whether the pair has an Ego4D or Ego-Exo4D frame; `open` pairs have none |
-| `rebuild` | what the release gives for this pair (docs/ego.md) |
+| `needs_ego` | whether the pair has an Ego4D or Ego-Exo4D frame, which `props rebuild-ego` makes (docs/ego.md) |
 
 | group | subtype | pairs | where the valid look is |
 |---|---|---:|---|

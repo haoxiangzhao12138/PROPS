@@ -14,15 +14,15 @@ from props.judge import content  # noqa: E402
 from props.manifest import check, export  # noqa: E402
 
 
-def make_bench(root, subtype="Recall-Start", rebuild="images"):
+def make_bench(root, subtype="Recall-Start"):
     """One pair. Recall: draw step 1 (the query). Reuse: draw the evidence step 1, keep it, draw the query 2."""
     reuse = subtype.startswith("Reuse")
     bench, out = root / "bench", root / "out"
     for p in (bench / "items", bench / "judge", bench / "images", out):
         p.mkdir(parents=True, exist_ok=True)
     Image.new("RGB", (32, 32), "white").save(bench / "images" / "f0.png")
-    pair = {"pair": "p1", "subtype": subtype, "items": ["p1_A", "p1_B"], "cluster": "c1", "open": True,
-            "phase_a": True, "rebuild": rebuild}
+    pair = {"pair": "p1", "subtype": subtype, "items": ["p1_A", "p1_B"], "cluster": "c1", "phase_a": True,
+            "needs_ego": False}
     (bench / "pairs.jsonl").write_text(json.dumps(pair) + "\n")
     sides = {}
     for v in "AB":
@@ -351,20 +351,6 @@ def test_missing_frames_block_score_and_old_board_is_removed():
         assert json.loads((out / "props_board.json").read_text())["board"]["missing_sides"] == 1
 
 
-def test_withheld_pair_is_not_drawn_and_fails():
-    setup()
-    with tempfile.TemporaryDirectory() as t:
-        bench, out = make_bench(Path(t), rebuild="partial")
-        (bench / "images" / "f0.png").unlink()  # the relit Ego frame that is not shared
-        assert export(bench, out, "full")[:3] == (0, 0, 0)
-        assert check(bench, out, "full", verbose=False) == ([], [], [])
-        args = ["--bench", str(bench), "--outputs", str(out), "--judge", "u", "--grounder", "u", "--split", "full"]
-        assert main(["evaluate"] + args) == 0 and Fake.calls == 0
-        row = json.loads((out / "props_board.json").read_text())["board"]
-        assert row["Overall"] is None or row["Recall-Start"] == 0.0
-        assert row["scored"] == 1 and row["withheld_pairs"] == 1 and row["missing_sides"] == 0
-
-
 def test_frames_of_another_size_are_scored_at_the_frame_size():
     from props.judge import content
     with tempfile.TemporaryDirectory() as t:
@@ -414,6 +400,21 @@ def test_frames_from_another_data_version_or_rejected_inputs_are_not_scored():
         (bench / "props_download.json").write_text(json.dumps({"commit": "c1"}))
         (bench / "images" / "f0.png").rename(bench / "images" / "f0.png.rejected")
         assert main(["evaluate"] + args) == 2
+
+
+def test_download_waits_out_the_rate_limit():
+    import time
+    from props.data import fetch
+
+    class Limited(Exception):
+        response = type("R", (), {"status_code": 429})()
+    calls, slept, sleep = [], [], time.sleep
+    time.sleep = slept.append
+    try:
+        assert fetch(lambda: calls.append(1) or (len(calls) > 8 and "done") or (_ for _ in ()).throw(Limited())) == "done"
+    finally:
+        time.sleep = sleep
+    assert len(calls) == 9 and slept == [300] * 8
 
 
 if __name__ == "__main__":

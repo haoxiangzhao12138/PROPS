@@ -41,7 +41,6 @@ def board(bench, outputs, split="full", ci=False, draws=2000, seed=0):
     row["Exec"] = pct([y["exec"] for y in sides if "exec" in y])
     row["missing_sides"] = sum(bool(y.get("missing")) for y in sides)
     row["unverified_sides"] = sum(bool(y.get("unverified")) for y in sides)  # scored with --allow-unverified
-    row["withheld_pairs"] = sum(bool(x["A"].get("withheld")) for x in res)  # need a relit Ego4D frame, count as failed
     if ci:
         row["ci"] = bootstrap(pairs, ok, draws, seed)
     return row
@@ -83,8 +82,6 @@ def show(row):
     print(f"split {row.get('split')}: {row['pairs']} pairs, {row['scored']} scored, {row['missing_sides']} sides without an output")
     if row["scored"] < row["pairs"]:
         print(f"note: {row['pairs'] - row['scored']} pairs are not scored yet and count as failed; run `props score` first")
-    if row.get("withheld_pairs"):
-        print(f"note: {row['withheld_pairs']} pairs need a relit Ego4D frame that is not shared and count as failed")
 
 
 def code_commit():

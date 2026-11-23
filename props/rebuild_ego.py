@@ -13,7 +13,6 @@ Pointer rows of PROPS-Benchmark ("how"):
               1024 px pinhole view, else shrink the long side to at most 1280 px; save as JPEG quality 93
     edit      paste the RGBA patch (edited pixels of one look) into its base frame at "box"; save as PNG
     crop      cut "rect" from the image "of"; save as JPEG quality 95
-    withheld  built on a relit frame that no pointer can rebuild; the pair says so in pairs.jsonl "rebuild"
 Pointer rows of PROPS-Train ("recipe"; frames of at most 640 px):
     seek            seek to second t and take the first decoded frame; save as JPEG quality 85
     keyframes_fps1  ffmpeg keyframes at one frame per second, frame t (needs ffmpeg in PATH or --ffmpeg)
@@ -194,9 +193,6 @@ def rebuild(data, ego4d=None, egoexo4d=None, workers=8, max_dist=8, force=False,
             except Exception as e:  # noqa: BLE001
                 status[r["image"]] = f"error: {str(e)[-160:]}"
     for r in rows:
-        if r.get("how") == "withheld":
-            status[r["image"]] = "withheld"
-            continue
         s = status.get(r["image"], "missing")
         if not s.startswith(("ok", "pts ")):
             continue
@@ -216,7 +212,7 @@ def rebuild(data, ego4d=None, egoexo4d=None, workers=8, max_dist=8, force=False,
                 status[r["image"]] = f"{need} rejected"
     for r in rows:  # move every image that failed aside, so that no pair counts as ready with it
         q = root / r["image"]
-        if not status.get(r["image"], "").startswith(("ok", "withheld")) and q.exists():
+        if not status.get(r["image"], "").startswith("ok") and q.exists():
             os.replace(q, q.with_name(q.name + ".rejected"))
     report = {"max_dist": max_dist, "status": status, "dist": dists}
     (root / "ego" / "rebuild_report.json").write_text(json.dumps(report, indent=0))
