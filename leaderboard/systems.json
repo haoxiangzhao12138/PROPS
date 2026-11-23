@@ -54,9 +54,9 @@
   {"key": "agent_q9_f3_main", "name": "Qwen3.5-9B + FLUX.3-klein", "family": "small_agent", "splits": ["phase_a"]},
   {"key": "agent_q9_qedit_main", "name": "Qwen3.5-9B + Qwen-Image-Edit", "family": "small_agent", "splits": ["phase_a"]},
   {"key": "agent_q9_f3np_main", "name": "Qwen3.5-9B + FLUX.3-klein, no upsampler", "family": "small_agent", "splits": ["phase_a"]},
-  {"key": "sn_abl_fullsh_main", "name": "SenseNova-U1.5 + PROPS-Train", "family": "train", "splits": ["full", "phase_a"]},
-  {"key": "bagel_v2c2000_main", "name": "BAGEL + PROPS-Train", "family": "train", "splits": ["full", "phase_a"]},
-  {"key": "q21_v2_4000_main", "name": "Qwen-Image-2.1 + PROPS-Train (LoRA)", "family": "train", "splits": ["full", "phase_a"]},
-  {"key": "qedit_v2_2000_main", "name": "Qwen-Image-Edit + PROPS-Train (LoRA)", "family": "train", "splits": ["full", "phase_a"]}
+  {"key": "sensenova_props_train", "name": "SenseNova-U1.5 + PROPS-Train", "family": "train", "splits": ["full", "phase_a"]},
+  {"key": "bagel_props_train", "name": "BAGEL + PROPS-Train", "family": "train", "splits": ["full", "phase_a"]},
+  {"key": "qwen21_props_train", "name": "Qwen-Image-2.1 + PROPS-Train (LoRA)", "family": "train", "splits": ["full", "phase_a"]},
+  {"key": "qwen_edit_props_train", "name": "Qwen-Image-Edit + PROPS-Train (LoRA)", "family": "train", "splits": ["full", "phase_a"]}
  ]
 }

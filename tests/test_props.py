@@ -80,7 +80,7 @@ def setup(fake=Fake):
     fake.calls, fake.fail = 0, False
 
 
-def test_crop_retry_reads_the_new_crop():
+def test_kind_check_reads_each_new_crop():
     """The first box is wrong (red half), the second right (blue half): the kind check must see the second crop."""
     class Vision:
         def __init__(self):

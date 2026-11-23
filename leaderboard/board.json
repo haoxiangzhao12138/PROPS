@@ -718,7 +718,7 @@
     "unscored": 0
    },
    {
-    "key": "sn_abl_fullsh_main",
+    "key": "sensenova_props_train",
     "name": "SenseNova-U1.5 + PROPS-Train",
     "family": "train",
     "Overall": 46.8,
@@ -742,7 +742,7 @@
     "unscored": 0
    },
    {
-    "key": "bagel_v2c2000_main",
+    "key": "bagel_props_train",
     "name": "BAGEL + PROPS-Train",
     "family": "train",
     "Overall": 15.0,
@@ -766,7 +766,7 @@
     "unscored": 0
    },
    {
-    "key": "q21_v2_4000_main",
+    "key": "qwen21_props_train",
     "name": "Qwen-Image-2.1 + PROPS-Train (LoRA)",
     "family": "train",
     "Overall": 11.3,
@@ -790,7 +790,7 @@
     "unscored": 1
    },
    {
-    "key": "qedit_v2_2000_main",
+    "key": "qwen_edit_props_train",
     "name": "Qwen-Image-Edit + PROPS-Train (LoRA)",
     "family": "train",
     "Overall": 10.8,
@@ -1848,7 +1848,7 @@
     "unscored": 0
    },
    {
-    "key": "sn_abl_fullsh_main",
+    "key": "sensenova_props_train",
     "name": "SenseNova-U1.5 + PROPS-Train",
     "family": "train",
     "Overall": 49.0,
@@ -1872,7 +1872,7 @@
     "unscored": 0
    },
    {
-    "key": "bagel_v2c2000_main",
+    "key": "bagel_props_train",
     "name": "BAGEL + PROPS-Train",
     "family": "train",
     "Overall": 14.9,
@@ -1896,7 +1896,7 @@
     "unscored": 0
    },
    {
-    "key": "q21_v2_4000_main",
+    "key": "qwen21_props_train",
     "name": "Qwen-Image-2.1 + PROPS-Train (LoRA)",
     "family": "train",
     "Overall": 11.3,
@@ -1920,7 +1920,7 @@
     "unscored": 0
    },
    {
-    "key": "qedit_v2_2000_main",
+    "key": "qwen_edit_props_train",
     "name": "Qwen-Image-Edit + PROPS-Train (LoRA)",
     "family": "train",
     "Overall": 8.7,
@@ -2618,7 +2618,7 @@
     "unscored": 0
    },
    {
-    "key": "sn_abl_fullsh_main",
+    "key": "sensenova_props_train",
     "name": "SenseNova-U1.5 + PROPS-Train",
     "family": "train",
     "Overall": 47.0,
@@ -2642,7 +2642,7 @@
     "unscored": 0
    },
    {
-    "key": "bagel_v2c2000_main",
+    "key": "bagel_props_train",
     "name": "BAGEL + PROPS-Train",
     "family": "train",
     "Overall": 14.9,
@@ -2666,7 +2666,7 @@
     "unscored": 0
    },
    {
-    "key": "q21_v2_4000_main",
+    "key": "qwen21_props_train",
     "name": "Qwen-Image-2.1 + PROPS-Train (LoRA)",
     "family": "train",
     "Overall": 11.2,
@@ -2690,7 +2690,7 @@
     "unscored": 1
    },
    {
-    "key": "qedit_v2_2000_main",
+    "key": "qwen_edit_props_train",
     "name": "Qwen-Image-Edit + PROPS-Train (LoRA)",
     "family": "train",
     "Overall": 10.8,
@@ -3748,7 +3748,7 @@
     "unscored": 0
    },
    {
-    "key": "sn_abl_fullsh_main",
+    "key": "sensenova_props_train",
     "name": "SenseNova-U1.5 + PROPS-Train",
     "family": "train",
     "Overall": 49.4,
@@ -3772,7 +3772,7 @@
     "unscored": 0
    },
    {
-    "key": "bagel_v2c2000_main",
+    "key": "bagel_props_train",
     "name": "BAGEL + PROPS-Train",
     "family": "train",
     "Overall": 14.9,
@@ -3796,7 +3796,7 @@
     "unscored": 0
    },
    {
-    "key": "q21_v2_4000_main",
+    "key": "qwen21_props_train",
     "name": "Qwen-Image-2.1 + PROPS-Train (LoRA)",
     "family": "train",
     "Overall": 11.3,
@@ -3820,7 +3820,7 @@
     "unscored": 0
    },
    {
-    "key": "qedit_v2_2000_main",
+    "key": "qwen_edit_props_train",
     "name": "Qwen-Image-Edit + PROPS-Train (LoRA)",
     "family": "train",
     "Overall": 8.7,
