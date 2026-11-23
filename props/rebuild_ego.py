@@ -1,6 +1,6 @@
 """Rebuild the Ego4D and Ego-Exo4D images of a PROPS dataset from the official videos.
 
-PROPS-Benchmark and PROPS-Train do not contain Ego4D or Ego-Exo4D pixels. Each such image has a row in ego/pointers.jsonl that says how
+PROPS-Benchmark and PROPS-Train do not contain Ego4D or Ego-Exo4D frames. Each such image has a row in ego/pointers.jsonl that says how
 to make it from the official video, and this script makes it and checks it against the released perceptual hash.
 Get the videos from https://ego4d-data.org first:
     Ego4D      ego4d --datasets clips --version v2          -> <ego4d>/v2/clips/<uid>.mp4
