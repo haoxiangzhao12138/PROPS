@@ -36,6 +36,7 @@ def download(root, repo=REPO_BENCH, token=None, ego=True, keep_tars=False, revis
     props_download.json records the repo, the revision asked for and the commit it resolved to.
     PROPS-Train ships its images as images/part-NNN.tar; they are unpacked into `root` and, unless keep_tars,
     deleted one by one. A part that was unpacked leaves images/part-NNN.tar.done and is not downloaded again."""
+    os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "60")  # slow links time out at the default 10 s
     from huggingface_hub import snapshot_download
     root = Path(root)
     done = sorted(p.name[:-5] for p in (root / "images").glob("part-*.tar.done")) if root.exists() else []
@@ -43,19 +44,21 @@ def download(root, repo=REPO_BENCH, token=None, ego=True, keep_tars=False, revis
     from huggingface_hub import HfApi
     sha = HfApi().repo_info(repo, repo_type="dataset", revision=revision, token=token).sha  # pin the commit first
     fetch(lambda: snapshot_download(repo_id=repo, repo_type="dataset", local_dir=str(root), token=token, revision=sha,
-                                    ignore_patterns=ignore or None, max_workers=16))
+                                    ignore_patterns=ignore or None, max_workers=16),
+          progress=lambda: sum(1 for _ in root.rglob("*")) if root.exists() else 0)
     root.mkdir(parents=True, exist_ok=True)
     write_json(root / "props_download.json", {"repo": repo, "revision": revision or "main", "commit": sha})
     unpack(root, keep_tars)
     return root
 
 
-def fetch(call, tries=6):
+def fetch(call, tries=6, progress=None):
     """Run a Hugging Face download, again after a dropped connection (files already on disk are kept, so each try
     resumes). Access errors are not retried. Hugging Face limits the number of files per five minutes, so when it
-    says so (HTTP 429) the download waits five minutes and goes on, as often as it takes."""
+    says so (HTTP 429) the download waits five minutes and goes on, as often as it takes. It gives up after `tries`
+    dropped connections in a row with no new file on disk (`progress` counts them)."""
     import time
-    k = 0
+    k, last = 0, progress() if progress else 0
     while True:
         try:
             return call()
@@ -66,7 +69,8 @@ def fetch(call, tries=6):
                       flush=True)
                 time.sleep(300)
                 continue
-            k += 1
+            now = progress() if progress else 0
+            k, last = (0 if now > last else k) + 1, max(now, last)
             if code in (401, 403, 404) or k == tries:
                 raise
             print(f"[props download] interrupted ({type(e).__name__}: {str(e)[:120]}); retrying in {30 * k} s",

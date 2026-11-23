@@ -417,6 +417,28 @@ def test_download_waits_out_the_rate_limit():
     assert len(calls) == 9 and slept == [300] * 8
 
 
+def test_download_goes_on_while_files_arrive():
+    import time
+    from props.data import fetch
+    calls, sleep = [], time.sleep
+    time.sleep = lambda s: None
+    def call():
+        calls.append(1)
+        if len(calls) < 10:
+            raise TimeoutError("read timed out")
+        return "done"
+    try:
+        assert fetch(call, tries=3, progress=lambda: len(calls)) == "done"  # a new file before every failure
+        calls.clear()
+        try:
+            fetch(call, tries=3, progress=lambda: 0)  # nothing arrives: give up after three failures
+            assert False
+        except TimeoutError:
+            assert len(calls) == 3
+    finally:
+        time.sleep = sleep
+
+
 if __name__ == "__main__":
     for name, f in list(globals().items()):
         if name.startswith("test_"):
