@@ -4,13 +4,12 @@
 #   page code    page/style.css and page/app.js, copied to static/ on every build
 #   abstract     <paper>/sections/abstract.tex, kept in static/abstract.html
 #   figures      <paper>/figs/*.pdf, rendered with pdftoppm into static/
-#   paper        <paper>/main.pdf, copied to static/PROPS_arxiv.pdf until the arXiv link exists
 #   Chinese      page/zh.py and page/abstract_zh.html, shown by the language switch of the page
 #
 # Check out gh-pages next to this repository once, then rebuild after every change to the leaderboard:
 #   git worktree add ../PROPS-site gh-pages
 #   python3 page/make_page.py --out ../PROPS-site                    leaderboard and page code, keeps the figures
-#   python3 page/make_page.py --out ../PROPS-site --paper DIR        also the abstract, figures and PDF from DIR
+#   python3 page/make_page.py --out ../PROPS-site --paper DIR        also the abstract and figures from DIR
 #   python3 -m http.server 8000 --bind 127.0.0.1 -d ../PROPS-site     preview
 import argparse, html, json, re, shutil, subprocess, sys
 from pathlib import Path
@@ -19,9 +18,9 @@ ROOT = Path(__file__).resolve().parent.parent
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import zh as Z  # noqa: E402
-LINKS = {  # placeholders until the release is public
-    "paper": "static/PROPS_arxiv.pdf",
-    "arxiv": "",  # the arXiv abstract page, once the id exists; until then the button says coming soon
+LINKS = {  # a link left empty shows its button as coming soon
+    "paper": "https://arxiv.org/pdf/2611.29665",
+    "arxiv": "https://arxiv.org/abs/2611.29665",
     "code": "https://github.com/haoxiangzhao12138/PROPS",
     "bench": "https://huggingface.co/datasets/CUDAOUTOFMEMORY/PROPS-Benchmark",
     "train": "https://huggingface.co/datasets/CUDAOUTOFMEMORY/PROPS-Train",
@@ -112,8 +111,6 @@ def assets(paper, out):
     for dst, src in FIGS.items():  # 320 dpi: twice the page width in pixels, sharp on high-density screens
         subprocess.run([exe, "-png", "-r", "320", "-singlefile", str(paper / f"figs/{src}.pdf"), str(st / dst)],
                        check=True)
-    if (paper / "main.pdf").exists():
-        shutil.copy(paper / "main.pdf", st / "PROPS_arxiv.pdf")
     (st / "abstract.html").write_text(abstract(paper) + "\n")
 
 
@@ -184,10 +181,14 @@ def fig(k):
 
 
 BIB = """@misc{props2026,
-  title  = {{PROPS}: Can Visual Generators Keep the Current Look of a Prop?},
-  author = {Hao, Xiangzhao and Wang, Dianyi and Zhou, Keyan and Zhang, Yiqian and Zhang, Zefeng and Li, Bailin
-            and Zhan, Kun and Yan, Junchi},
-  year   = {2026}
+  title         = {{PROPS}: Can Visual Generators Keep the Current Look of a Prop?},
+  author        = {Hao, Xiangzhao and Wang, Dianyi and Zhou, Keyan and Zhang, Yiqian and Zhang, Zefeng and Li, Bailin
+                   and Zhan, Kun and Yan, Junchi},
+  year          = {2026},
+  eprint        = {2611.29665},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2611.29665}
 }"""
 
 USAGE = """git clone https://github.com/haoxiangzhao12138/PROPS && cd PROPS

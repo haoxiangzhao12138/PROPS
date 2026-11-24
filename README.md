@@ -1,6 +1,6 @@
 # PROPS: Can Visual Generators Keep the Current Look of a Prop?
 
-Paper (arXiv, coming soon) ·
+[Paper (arXiv)](https://arxiv.org/abs/2611.29665) ·
 [Project page](https://haoxiangzhao12138.github.io/PROPS/) ·
 [PROPS-Benchmark](https://huggingface.co/datasets/CUDAOUTOFMEMORY/PROPS-Benchmark) ·
 [PROPS-Train](https://huggingface.co/datasets/CUDAOUTOFMEMORY/PROPS-Train)
@@ -208,9 +208,13 @@ weights of the four models fine-tuned on PROPS-Train are not released.
 
 ```bibtex
 @misc{props2026,
-  title  = {{PROPS}: Can Visual Generators Keep the Current Look of a Prop?},
-  author = {Hao, Xiangzhao and Wang, Dianyi and Zhou, Keyan and Zhang, Yiqian and Zhang, Zefeng and Li, Bailin
-            and Zhan, Kun and Yan, Junchi},
-  year   = {2026}
+  title         = {{PROPS}: Can Visual Generators Keep the Current Look of a Prop?},
+  author        = {Hao, Xiangzhao and Wang, Dianyi and Zhou, Keyan and Zhang, Yiqian and Zhang, Zefeng and Li, Bailin
+                   and Zhan, Kun and Yan, Junchi},
+  year          = {2026},
+  eprint        = {2611.29665},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2611.29665}
 }
 ```
