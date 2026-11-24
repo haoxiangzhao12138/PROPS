@@ -35,7 +35,8 @@ props board --outputs leaderboard/runs/sensenova_full --ci
 ```
 
 The last command recomputes the SenseNova-U1.5 row of the paper (Overall 26.7) from its stored scores. It needs no
-GPU and checks that the install and the download work. PROPS-Benchmark has 13,919 small files; behind an HTTP proxy, `export HF_HUB_DISABLE_XET=1` speeds up their download.
+GPU and checks that the install and the download work. PROPS-Benchmark comes as a few tars, which `props download`
+unpacks; behind an HTTP proxy, `export HF_HUB_DISABLE_XET=1` speeds up the download.
 
 ## Evaluate your model
 

@@ -12,6 +12,9 @@ data/PROPS-Benchmark/
   ego/patches/               RGBA patches with the edited pixels of the Ego looks
 ```
 
+On Hugging Face, `items/`, `judge/`, `images/` and `ego/patches/` come as tars (`items/part-000.tar` and so on),
+and `props download` unpacks them into this layout.
+
 ## Loading
 
 ```python

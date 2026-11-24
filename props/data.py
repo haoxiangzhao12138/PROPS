@@ -14,6 +14,7 @@ Layout of the dataset folder:
     images/              every image except Ego4D / Ego-Exo4D frames, named by sha1
     ego/pointers.jsonl   how to rebuild each Ego4D / Ego-Exo4D image from the official videos
     ego/patches/         RGBA patches with the edited pixels of the Ego looks
+On the Hub these folders are tars, <folder>/part-NNN.tar, which `props download` unpacks.
 """
 import hashlib, json, os
 from functools import lru_cache
@@ -34,18 +35,19 @@ SPLITS = {"full": lambda p: True,
 def download(root, repo=REPO_BENCH, token=None, ego=True, keep_tars=False, revision=None):
     """Download a PROPS dataset repo into `root`. ego=False skips the Ego pointers and patches.
     props_download.json records the repo, the revision asked for and the commit it resolved to.
-    PROPS-Train ships its images as images/part-NNN.tar; they are unpacked into `root` and, unless keep_tars,
-    deleted one by one. A part that was unpacked leaves images/part-NNN.tar.done and is not downloaded again."""
+    Both datasets ship their files as tars, <folder>/part-NNN.tar; they are unpacked into `root` and, unless
+    keep_tars, deleted one by one. A part that was unpacked leaves <folder>/part-NNN.tar.done and is not downloaded
+    again."""
     os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "60")  # slow links time out at the default 10 s
     from huggingface_hub import snapshot_download
     root = Path(root)
-    done = sorted(p.name[:-5] for p in (root / "images").glob("part-*.tar.done")) if root.exists() else []
-    ignore = ([] if ego else ["ego/*"]) + [f"images/{n}" for n in done]
+    done = sorted(p.relative_to(root).as_posix()[:-5] for p in root.glob("*/part-*.tar.done")) if root.exists() else []
+    ignore = ([] if ego else ["ego/*"]) + done
     from huggingface_hub import HfApi
     sha = HfApi().repo_info(repo, repo_type="dataset", revision=revision, token=token).sha  # pin the commit first
     fetch(lambda: snapshot_download(repo_id=repo, repo_type="dataset", local_dir=str(root), token=token, revision=sha,
                                     ignore_patterns=ignore or None, max_workers=16),
-          progress=lambda: sum(1 for _ in root.rglob("*")) if root.exists() else 0)
+          progress=lambda: sum(f.stat().st_size for f in root.rglob("*") if f.is_file()) if root.exists() else 0)
     root.mkdir(parents=True, exist_ok=True)
     write_json(root / "props_download.json", {"repo": repo, "revision": revision or "main", "commit": sha})
     unpack(root, keep_tars)
@@ -56,7 +58,7 @@ def fetch(call, tries=6, progress=None):
     """Run a Hugging Face download, again after a dropped connection (files already on disk are kept, so each try
     resumes). Access errors are not retried. Hugging Face limits the number of files per five minutes, so when it
     says so (HTTP 429) the download waits five minutes and goes on, as often as it takes. It gives up after `tries`
-    dropped connections in a row with no new file on disk (`progress` counts them)."""
+    dropped connections in a row with nothing new on disk (`progress` measures it)."""
     import time
     k, last = 0, progress() if progress else 0
     while True:
@@ -79,11 +81,10 @@ def fetch(call, tries=6, progress=None):
 
 
 def unpack(root, keep_tars=False):
-    """Unpack images/part-NNN.tar of PROPS-Train into `root` (the paths inside start with images/)."""
+    """Unpack every <folder>/part-NNN.tar into `root` (the paths inside are relative to `root`)."""
     import tarfile
     root = Path(root)
-    parts = [p for p in sorted((root / "images").glob("part-*.tar"))
-             if not (root / "images" / f"{p.name}.done").exists()]
+    parts = [p for p in sorted(root.glob("*/part-*.tar")) if not p.with_name(p.name + ".done").exists()]
     for i, tar in enumerate(parts):
         with tarfile.open(tar) as tf:
             members = tf.getmembers()
@@ -92,10 +93,10 @@ def unpack(root, keep_tars=False):
                     raise ValueError(f"unexpected entry {m.name!r} in {tar.name}")
             kw = {"filter": "data"} if hasattr(tarfile, "data_filter") else {}
             tf.extractall(root, members=members, **kw)
-        (root / "images" / f"{tar.name}.done").write_text(f"{len(members)}\n")
+        tar.with_name(tar.name + ".done").write_text(f"{len(members)}\n")
         if not keep_tars:
             tar.unlink()
-        print(f"unpacked {tar.name} ({i + 1}/{len(parts)}, {len(members)} images)", flush=True)
+        print(f"unpacked {tar.relative_to(root)} ({i + 1}/{len(parts)}, {len(members)} files)", flush=True)
 
 
 def _jsonl(p):
@@ -109,6 +110,8 @@ class Bench:
         if not (self.root / "pairs.jsonl").exists():
             raise FileNotFoundError(f"no PROPS-Benchmark at {self.root} (pairs.jsonl not found); run `props download` "
                                     "or pass --bench")
+        if [t for t in self.root.glob("*/part-*.tar") if not t.with_name(t.name + ".done").exists()]:
+            raise FileNotFoundError(f"{self.root} holds tars that are not unpacked yet; run `props download` again")
         self._pairs = _jsonl(self.root / "pairs.jsonl")
         self.by_id = {p["pair"]: p for p in self._pairs}
 

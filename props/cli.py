@@ -172,7 +172,7 @@ def parser():
     p.add_argument("--train", action="store_true", help="also download PROPS-Train")
     p.add_argument("--train-only", action="store_true", help="download PROPS-Train only")
     p.add_argument("--no-ego", action="store_true", help="skip the Ego4D / Ego-Exo4D pointers and patches")
-    p.add_argument("--keep-tars", action="store_true", help="keep the PROPS-Train image tars after unpacking them")
+    p.add_argument("--keep-tars", action="store_true", help="keep the tars after unpacking them")
     p.add_argument("--revision", help="dataset revision (tag or commit) to download, default the latest")
     p.add_argument("--token", help="Hugging Face token with read access (default: $HF_TOKEN or the cached login)")
 

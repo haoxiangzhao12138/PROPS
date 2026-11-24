@@ -439,6 +439,33 @@ def test_download_goes_on_while_files_arrive():
         time.sleep = sleep
 
 
+def test_download_unpacks_the_tars_of_every_folder():
+    import tarfile
+    from props.data import Bench, unpack
+    with tempfile.TemporaryDirectory() as t:
+        bench, _ = make_bench(Path(t))
+        hub = Path(t) / "hub"
+        (hub / "ego").mkdir(parents=True)
+        (bench / "ego" / "patches").mkdir(parents=True)
+        Image.new("RGBA", (4, 4)).save(bench / "ego" / "patches" / "x.png")
+        for folder, content in (("items", "items"), ("judge", "judge"), ("images", "images"), ("ego", "ego/patches")):
+            (hub / folder).mkdir(exist_ok=True)
+            with tarfile.open(hub / folder / "part-000.tar", "w") as tf:
+                for p in sorted((bench / content).rglob("*")):
+                    tf.add(p, arcname=p.relative_to(bench).as_posix())
+        (hub / "pairs.jsonl").write_text((bench / "pairs.jsonl").read_text())
+        try:
+            Bench(hub)
+            assert False
+        except FileNotFoundError:
+            pass
+        unpack(hub)
+        assert not list(hub.glob("*/part-*.tar")) and len(list(hub.glob("*/part-*.tar.done"))) == 4
+        assert (hub / "ego" / "patches" / "x.png").exists() and (hub / "images" / "f0.png").exists()
+        b = Bench(hub)
+        assert [p["pair"] for p in b.pairs("full")] == ["p1"] and b.ready(b.pairs("full")[0])
+
+
 if __name__ == "__main__":
     for name, f in list(globals().items()):
         if name.startswith("test_"):

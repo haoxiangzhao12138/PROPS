@@ -9,6 +9,7 @@ two scoring models. A row of the leaderboard always names the versions it was sc
 - PROPS-Benchmark: 2,257 pairs. Splits `full` (all 2,257 pairs) and `phase_a` (600).
 - PROPS-Train: 80,250 chains, 120,339 training and 6,277 validation targets.
 - Both datasets are tagged `v1.0.0` on Hugging Face, and `scripts/setup.sh` downloads this tag.
+- Both datasets ship their files as tars of at most 1 GB, which `props download` unpacks.
 - Scoring protocol `props-score-v1`: judge google/gemma-4-31B-it at 842da37, grounder Qwen/Qwen3.8-27B at 1d4bf0f,
   served with vLLM 0.30.0.
 - Commands: download, rebuild-ego, generate, export, collect, check, score, board, evaluate.
